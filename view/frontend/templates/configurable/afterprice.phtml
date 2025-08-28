@@ -57,8 +57,7 @@ $attributeIdSelector = $viewModel->getAttributeIdSelector($productId);
                         result = config.optionPrices[_.findKey(config.index, options)];
                     }
                 }
-                var selector = '.product-info-price .baseprice-' +
-                    '<?= $productId ?>';
+                var selector = '.baseprice-' + '<?= $productId ?>';
                 var basePriceField = $(selector);
                 if (typeof result != 'undefined' && result.magenerds_baseprice_text.length && basePriceField.length) {
                     basePriceField.html(result.magenerds_baseprice_text);
