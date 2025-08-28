@@ -23,62 +23,28 @@ namespace Magenerds\BasePrice\Model\Plugin;
  */
 class ConfigurablePrice
 {
-    /**
-     * @var \Magenerds\BasePrice\Helper\Data
-     */
-    protected $_helper;
-
-    /**
-     * @var \Magento\Framework\Json\EncoderInterface
-     */
-    protected $_jsonEncoder;
-
-    /**
-     * @var \Magento\Framework\Json\DecoderInterface
-     */
-    protected $_jsonDecoder;
-
-    /**
-     * Constructor
-     *
-     * @param \Magenerds\BasePrice\Helper\Data $helper
-     * @param \Magento\Framework\Json\EncoderInterface $jsonEncoder
-     * @param \Magento\Framework\Json\DecoderInterface $jsonDecoder
-     */
     public function __construct(
-        \Magenerds\BasePrice\Helper\Data $helper,
-        \Magento\Framework\Json\EncoderInterface $jsonEncoder,
-        \Magento\Framework\Json\DecoderInterface $jsonDecoder
+        private \Magenerds\BasePrice\Helper\Data $helper,
+        private \Magento\Framework\Json\EncoderInterface $jsonEncoder,
+        private \Magento\Framework\Json\DecoderInterface $jsonDecoder
     ){
-        $this->_helper = $helper;
-        $this->_jsonEncoder = $jsonEncoder;
-        $this->_jsonDecoder = $jsonDecoder;
     }
 
-    /**
-     * Plugin for configurable price rendering. Iterates over configurable's simples and adds the base price
-     * to price configuration.
-     *
-     * @param \Magento\Framework\Pricing\Render $subject
-     * @param $json string
-     * @return string
-     */
     public function afterGetJsonConfig(\Magento\ConfigurableProduct\Block\Product\View\Type\Configurable $subject, $json)
     {
-        $config = $this->_jsonDecoder->decode($json);
+        $config = $this->jsonDecoder->decode($json);
 
-        /** @var $product \Magento\Catalog\Model\Product */
         foreach ($subject->getAllowProducts() as $product) {
-            $basePriceText = $this->_helper->getBasePriceText($product);
+            $basePriceText = $this->helper->getBasePriceText($product);
 
             if (empty($basePriceText)) {
                 // if simple has no configured base price, us at least the base price of configurable
-                $basePriceText = $this->_helper->getBasePriceText($subject->getProduct());
+                $basePriceText = $this->helper->getBasePriceText($subject->getProduct());
             }
 
             $config['optionPrices'][$product->getId()]['magenerds_baseprice_text'] = $basePriceText;
         }
 
-        return $this->_jsonEncoder->encode($config);
+        return $this->jsonEncoder->encode($config);
     }
 }

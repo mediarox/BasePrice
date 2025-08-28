@@ -1,7 +1,6 @@
 <?php
 /**
  * NOTICE OF LICENSE
- *
  * This source file is subject to the Open Software License (OSL 3.0)
  * that is available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
@@ -11,59 +10,33 @@
  * @category   Magenerds
  * @package    Magenerds_BasePrice
  * @subpackage Block
- * @copyright  Copyright (c) 2019 TechDivision GmbH (https://www.techdivision.com)
+ * @copyright  Copyright (c) 2019 TechDivision GmbH
+ *             (https://www.techdivision.com)
  * @link       https://www.techdivision.com/
  * @author     Florian Sydekum <f.sydekum@techdivision.com>
  */
+
 namespace Magenerds\BasePrice\Block;
+
+use Magento\Catalog\Model\Product;
+use Magento\Framework\View\Element\Template;
+use Magenerds\BasePrice\Helper\Data;
 
 /**
  * Class AfterPrice
+ *
  * @package Magenerds\BasePrice\Block
  */
-class AfterPrice extends \Magento\Framework\View\Element\Template
+class AfterPrice extends Template
 {
-    /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected $_scopeConfig;
-
-    /**
-     * @var \Magenerds\BasePrice\Helper\Data
-     */
-    protected $_helper;
-
-    /**
-     * @var \Magento\Catalog\Model\Product
-     */
-    protected $_product;
-
-    /**
-     * @var string
-     */
-    protected $_configurablePricesJson;
-
-    /**
-     * Constructor
-     *
-     * @param \Magento\Backend\Block\Template\Context $context
-     * @param \Magenerds\BasePrice\Helper\Data $helper
-     * @param \Magento\Catalog\Model\Product $product
-     * @param \Magento\Catalog\Helper\Product $catalogProduct
-     * @param \Magento\Framework\Json\EncoderInterface $jsonEncoder
-     * @param array $data
-     */
-	public function __construct(
-		\Magento\Backend\Block\Template\Context $context,
-        \Magenerds\BasePrice\Helper\Data $helper,
-        \Magento\Catalog\Model\Product $product,
-		array $data = []
-	){
-        $this->_scopeConfig = $context->getScopeConfig();
-        $this->_helper = $helper;
-        $this->_product = $product;
-		parent::__construct($context, $data);
-	}
+    public function __construct(
+        \Magento\Backend\Block\Template\Context $context,
+        protected Data $helper,
+        protected Product $product,
+        array $data = []
+    ) {
+        parent::__construct($context, $data);
+    }
 
     /**
      * Returns the configuration if module is enabled
@@ -77,26 +50,27 @@ class AfterPrice extends \Magento\Framework\View\Element\Template
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
 
-        $productAmount = $this->getProduct()->getData('baseprice_product_amount');
+        $productAmount = $this->getProduct()
+            ->getData('baseprice_product_amount');
 
         return $moduleEnabled && !empty($productAmount);
     }
 
-	/**
-	 * Retrieve current product
-	 *
-	 * @return \Magento\Catalog\Model\Product
-	 */
-	public function getProduct()
-	{
-        return $this->_product;
-	}
+    /**
+     * Retrieve current product
+     *
+     * @return Product
+     */
+    public function getProduct()
+    {
+        return $this->product;
+    }
 
     /**
      * Returns the base price information
      */
     public function getBasePrice()
     {
-        return $this->_helper->getBasePriceText($this->getProduct());
+        return $this->helper->getBasePriceText($this->getProduct());
     }
 }

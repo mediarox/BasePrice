@@ -1,9 +1,9 @@
 {
   "name": "magenerds/baseprice",
-  "description": "This module displays base prices",
+  "description": "This module displays base prices. Rework of original module.(https://github.com/Magenerds/BasePrice)",
   "require": {
     "magento/framework": "^100.0.0|^101.0.0|^102.0.0|^103.0.0",
-    "magenerds/dashboard": "^1.0"
+    "php": "~8.2||~8.3"
   },
   "type": "magento2-module",
   "license": "OSL-3.0",

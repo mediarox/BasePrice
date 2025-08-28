@@ -1,7 +1,6 @@
 <?php
 /**
  * NOTICE OF LICENSE
- *
  * This source file is subject to the Open Software License (OSL 3.0)
  * that is available through the world-wide-web at this URL:
  * http://opensource.org/licenses/osl-3.0.php
@@ -11,12 +10,15 @@
  * @category   Magenerds
  * @package    Magenerds_BasePrice
  * @subpackage Model
- * @copyright  Copyright (c) 2019 TechDivision GmbH (https://www.techdivision.com)
+ * @copyright  Copyright (c) 2019 TechDivision GmbH
+ *             (https://www.techdivision.com)
  * @link       https://www.techdivision.com/
  * @author     Florian Sydekum <f.sydekum@techdivision.com>
  */
+
 namespace Magenerds\BasePrice\Model\Plugin;
 
+use Magenerds\BasePrice\ViewModel\BasePriceViewModel;
 use Magento\Catalog\Pricing\Price\FinalPrice;
 use Magento\Framework\Pricing\Render;
 use Magento\Framework\Pricing\SaleableInterface;
@@ -24,6 +26,7 @@ use Magento\Framework\View\LayoutInterface;
 
 /**
  * Class AfterPrice
+ *
  * @package Magenerds\BasePrice\Model\Plugin
  */
 class AfterPrice
@@ -33,39 +36,32 @@ class AfterPrice
      *
      * @var string
      */
-    const FINAL_PRICE = 'final_price';
-
+    private const FINAL_PRICE = 'final_price';
     /**
      * Hold tier price code
      *
      * @var string
      */
-    const TIER_PRICE = 'tier_price';
-
-    /**
-     * @var LayoutInterface
-     */
-    protected $layout;
-
+    private const TIER_PRICE = 'tier_price';
     /**
      * @var []
      */
     protected $afterPriceHtml = [];
 
     /**
-     * @param LayoutInterface $layout
+     * @param  LayoutInterface $layout
      */
     public function __construct(
-        LayoutInterface $layout
-    ){
-        $this->layout = $layout;
+        private LayoutInterface $layout,
+        private BasePriceViewModel $viewModel,
+    ) {
     }
 
     /**
      * Plugin for price rendering in order to display after price information
      *
-     * @param Render $subject
-     * @param $renderHtml string
+     * @param  Render $subject
+     * @param         $renderHtml string
      * @return string
      */
     public function aroundRender(Render $subject, \Closure $closure, ...$params)
@@ -73,9 +69,9 @@ class AfterPrice
         // run default render first
         $renderHtml = $closure(...$params);
 
-        try{
+        try {
             // Get Price Code and Product
-            list($priceCode, $productInterceptor) = $params;
+            [$priceCode, $productInterceptor] = $params;
             $emptyTierPrices = empty($productInterceptor->getTierPrice());
 
             // If it is final price block and no tier prices exist set additional render
@@ -98,36 +94,33 @@ class AfterPrice
      */
     protected function getAfterPriceHtml(SaleableInterface $product)
     {
-        // check if product is available
-        if (!$product) return '';
-
         // if a grouped product is given we need the current child
         if ($product->getTypeId() == 'grouped') {
             $product = $product->getPriceInfo()
                 ->getPrice(FinalPrice::PRICE_CODE)
                 ->getMinProduct();
-
-            // check if we found a product
-            if (!$product) return '';
         }
 
-        // check if price for current product has been rendered before
-        if (!array_key_exists($product->getId(), $this->afterPriceHtml)) {
-            $afterPriceBlock = $this->layout->createBlock(
-                'Magenerds\BasePrice\Block\AfterPrice',
-                'baseprice_afterprice_' . $product->getId(),
-                ['product' => $product]
-            );
+        if ($product->getId()) {
+            // check if price for current product has been rendered before
+            if (!\array_key_exists($product->getId(), $this->afterPriceHtml)) {
+                $afterPriceBlock = $this->layout->createBlock(
+                    'Magenerds\BasePrice\Block\AfterPrice',
+                    'baseprice_afterprice_' . $product->getId(),
+                    ['product' => $product]
+                );
 
-            // use different templates for configurables and other product types
-            if ($product->getTypeId() == 'configurable') {
-                $templateFile = 'Magenerds_BasePrice::configurable/afterprice.phtml';
-            } else {
-                $templateFile = 'Magenerds_BasePrice::afterprice.phtml';
+                // use different templates for configurables and other product types
+                if ($product->getTypeId() == 'configurable') {
+                    $templateFile = 'Magenerds_BasePrice::configurable/afterprice.phtml';
+                } else {
+                    $templateFile = 'Magenerds_BasePrice::afterprice.phtml';
+                }
+
+                $afterPriceBlock->setTemplate($templateFile);
+                $afterPriceBlock->setData('view_model', $this->viewModel);
+                $this->afterPriceHtml[$product->getId()] = $afterPriceBlock->toHtml();
             }
-
-            $afterPriceBlock->setTemplate($templateFile);
-            $this->afterPriceHtml[$product->getId()] = $afterPriceBlock->toHtml();
         }
 
         return $this->afterPriceHtml[$product->getId()];
